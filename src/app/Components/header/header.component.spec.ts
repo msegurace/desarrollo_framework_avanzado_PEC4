@@ -4,6 +4,8 @@ import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { By } from '@angular/platform-browser';
+import { HeaderMenus } from 'src/app/Models/header-menus.dto';
+import { HeaderMenusService } from 'src/app/Services/header-menus.service';
 
 class TemporalComponentForRoutes {}
 
@@ -128,19 +130,99 @@ describe('HeaderComponent', () => {
   });
 
   //TEST 7: si estamos autenticados que muestre las opciones correctas
-  it('should show Authenticated menu options', () => {
-    const buttonsAuth: string[] = [];
-    fixture.whenStable().then(() => {
-      fixture.detectChanges(); // missed
+  it('should show Authenticated menu options', async () => {
+    const headerMenusService =
+      fixture.debugElement.injector.get(HeaderMenusService);
+
+    const buttonsAuth: boolean[] = [false, false, false, false, false];
+
+    const headerInfo: HeaderMenus = {
+      showAuthSection: true,
+      showNoAuthSection: false,
+    };
+    headerMenusService.headerManagement.next(headerInfo);
+
+    fixture.detectChanges();
+
+    await fixture.whenStable().then(() => {
       const buttonDebugElements = fixture.debugElement.queryAll(
         By.css('button')
       );
 
-      but.find(
-        (buttonDebugEl) =>
-          buttonDebugEl.nativeElement.textContent === 'Dashboard'
+      buttonDebugElements.forEach((but) => {
+        console.log(but.nativeElement.textContent);
+        switch (but.nativeElement.textContent) {
+          case 'Home':
+            buttonsAuth[0] = true;
+            break;
+          case 'Admin posts':
+            buttonsAuth[1] = true;
+            break;
+          case 'Admin categories':
+            buttonsAuth[2] = true;
+            break;
+          case 'Profile':
+            buttonsAuth[3] = true;
+            break;
+          case 'Logout':
+            buttonsAuth[4] = true;
+            break;
+        }
+      });
+      console.log(
+        buttonsAuth[0] +
+          ' ' +
+          buttonsAuth[1] +
+          ' ' +
+          buttonsAuth[2] +
+          ' ' +
+          buttonsAuth[3] +
+          ' ' +
+          buttonsAuth[4]
       );
-      expect(buttonDebugElement!.nativeElement.textContent).toBe('Dashboard');
+
+      expect(
+        buttonsAuth[0] &&
+          buttonsAuth[1] &&
+          buttonsAuth[2] &&
+          buttonsAuth[3] &&
+          buttonsAuth[4]
+      ).toBeTruthy();
+    });
+  });
+
+  //TEST 7: si estamos autenticados que muestre las opciones correctas
+  it('should show NOT Authenticated menu options', async () => {
+    const buttonsAuth: boolean[] = [false, false, false];
+    const headerMenusService =
+      fixture.debugElement.injector.get(HeaderMenusService);
+
+    const headerInfo: HeaderMenus = {
+      showAuthSection: false,
+      showNoAuthSection: true,
+    };
+    headerMenusService.headerManagement.next(headerInfo);
+    fixture.detectChanges();
+
+    await fixture.whenStable().then(() => {
+      const buttonDebugElements = fixture.debugElement.queryAll(
+        By.css('button')
+      );
+
+      buttonDebugElements.forEach((but) => {
+        switch (but.nativeElement.textContent) {
+          case 'Home':
+            buttonsAuth[0] = true;
+            break;
+          case 'Login':
+            buttonsAuth[1] = true;
+            break;
+          case 'Register':
+            buttonsAuth[2] = true;
+            break;
+        }
+      });
+      expect(buttonsAuth[0] && buttonsAuth[1] && buttonsAuth[2]).toBeTruthy();
     });
   });
 });
